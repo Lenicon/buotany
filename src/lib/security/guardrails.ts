@@ -41,7 +41,12 @@ const INJECTION_PATTERNS: ReadonlyArray<{ name: string; regex: RegExp }> = [
   {
     name: "instruction_override",
     regex:
-      /\b(?:ignore|disregard|forget|override|bypass|skip)\s+(?:all\s+|any\s+|the\s+)?(?:previous|prior|above|earlier|initial|original|system|developer)\s+(?:instructions?|prompts?|rules?|directives?|constraints?|guidelines?)\b/i,
+      /\b(?:ignore|disregard|forget|override|bypass|skip|pass\s+over)\s+(?:all\s+|any\s+|the\s+)?(?:previous|prior|above|earlier|initial|original|system|developer)\s+(?:instructions?|prompts?|rules?|directives?|constraints?|guidelines?|commands?|orders?)\b/i,
+  },
+  {
+    name: "context_reset",
+    regex:
+      /\bforget\s+(?:everything|all)\s+(?:we(?:'|’)?ve\s+|you\s+)?(?:discussed|said|talked\s+about|been\s+told)\b/i,
   },
   {
     name: "new_instructions",

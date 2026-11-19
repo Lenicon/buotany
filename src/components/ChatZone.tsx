@@ -185,7 +185,6 @@ export default function ChatZone({
                     value={input}
                     maxLength={1000}
                     onChange={(e) => setInput(e.target.value)}
-                    maxLength={1500}
                     placeholder="Ask about watering, light, pests…"
                     aria-label="Your message"
                 />

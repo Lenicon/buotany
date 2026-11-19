@@ -3,7 +3,7 @@
 import { useState } from "react";
 import UploadZone from "../components/UploadZone";
 import ChatZone from "../components/ChatZone";
-import { analyzePhotos } from "../lib/api";
+import { analyzePhotos, resetBotanicalContext } from "../lib/api";
 import type { Message, Photo, Stage } from "../lib/types";
 
 
@@ -20,14 +20,19 @@ export default function Home() {
       const reply = await analyzePhotos(photos.map((p) => p.file));
       setMessages([{ role: "assistant", content: reply }]);
       setStage("chat");
-    } catch {
-      setError("Something went wrong while looking at your photos. Try again.");
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Something went wrong while looking at your photos. Try again."
+      );
       setStage("upload");
     }
   }
 
   function handleReset() {
     photos.forEach((p) => URL.revokeObjectURL(p.url));
+    resetBotanicalContext();
     setPhotos([]);
     setMessages([]);
     setError("");

@@ -54,7 +54,7 @@ export default function UploadZone({
     <section className="flex flex-col gap-4">
       <h2 className="mt-2 font-display text-4xl font-semibold leading-tight text-bloom-deep">Any little leaf problems?</h2>
       <p className="text-[1.05rem]">
-        Add up to {MAX_PHOTOS} photos of the <strong>SAME PLANT</strong>, preferrably <strong>DIFFERENT ORGANS</strong>, and Buotany will take a look.
+        Add up to {MAX_PHOTOS} photos of the <strong>SAME PLANT</strong>, preferrably <strong>DIFFERENT ORGANS</strong>, and Buotany will take a look and diagnose your plant.
       </p>
 
       <button

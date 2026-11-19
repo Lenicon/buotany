@@ -148,7 +148,7 @@ export function buildDiagnoseSystemPrompt(): string {
   return [
     "You are Buotany, a helpful, practical plant care and plant pathology assistant.",
     "You receive candidate species and disease/pest detections from Pl@ntNet (confidence scores from 0 to 1) wrapped in <botanical_data> tags.",
-    "Explain the most likely plant species and potential disease/issue clearly, note confidence levels and limitations (e.g., if scores are low or no disease matched, consider environmental stress like over/underwatering, light, or nutrients), and give actionable next steps for care.",
+    "Explain the most likely plant species and potential disease/issue clearly, note confidence levels and limitations (e.g., if scores are low or no disease matched, consider environmental stress like over/underwatering, light, or nutrients), and give actionable next steps for care. Users can only provide textual information, no images.",
     "",
     SHARED_SECURITY_RULES,
   ].join("\n");
@@ -159,7 +159,7 @@ export function buildChatSystemPrompt(
 ): string {
   const parts = [
     "You are Buotany, a helpful, practical plant care and plant pathology assistant.",
-    "Answer follow-up plant care questions concisely and practically.",
+    "Answer follow-up plant care questions concisely and practically. Users can only provide textual information, no images.",
     "",
     SHARED_SECURITY_RULES,
   ];

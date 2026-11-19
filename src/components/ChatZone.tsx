@@ -55,20 +55,19 @@ export default function ChatZone({
       <div className="flex items-center justify-between gap-3">
         <ul className="flex gap-2 overflow-x-auto">
           {photos.map((p) => (
-            <li key={p.id} className="size-[52px] flex-none overflow-hidden rounded-2xl border-2 border-leaf">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+            <li key={p.id} className="size-13 flex-none overflow-hidden rounded-2xl border-2 border-leaf">
               <img src={p.url} alt="Your plant" className="block h-full w-full object-cover" />
             </li>
           ))}
         </ul>
-        <button type="button" className="cursor-pointer whitespace-nowrap rounded-full border-2 border-bloom px-[18px] py-2 font-bold text-bloom-deep hover:bg-petal" onClick={onReset}>
+        <button type="button" className="cursor-pointer whitespace-nowrap rounded-full border-2 border-bloom px-4.5 py-2 font-bold text-bloom-deep hover:bg-petal" onClick={onReset}>
           New photos
         </button>
       </div>
 
       <div className="flex max-h-[60dvh] min-h-80 flex-1 flex-col gap-2.5 overflow-y-auto rounded-[28px] border-2 border-petal bg-white p-4" aria-live="polite">
         {messages.map((m, i) => (
-          <div key={i} className={`max-w-[85%] whitespace-pre-wrap rounded-[20px] px-4 py-2.5 [overflow-wrap:anywhere] ${
+          <div key={i} className={`max-w-[85%] whitespace-pre-wrap rounded-[20px] px-4 py-2.5 wrap-anywhere ${
               m.role === "assistant"
                 ? "self-start rounded-bl-md bg-mint"
                 : "self-end rounded-br-md bg-petal"

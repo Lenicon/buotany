@@ -52,14 +52,14 @@ export default function UploadZone({
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="mt-2 font-display text-4xl font-semibold leading-tight text-bloom-deep">What’s growing?</h2>
-      <p className="max-w-[46ch] text-[1.05rem]">
-        Add up to {MAX_PHOTOS} photos of your plant and Buotany will take a look.
+      <h2 className="mt-2 font-display text-4xl font-semibold leading-tight text-bloom-deep">Any little leaf problems?</h2>
+      <p className="text-[1.05rem]">
+        Add up to {MAX_PHOTOS} photos of the <strong>SAME PLANT</strong>, preferrably <strong>DIFFERENT ORGANS</strong>, and Buotany will take a look.
       </p>
 
       <button
         type="button"
-        className={`flex cursor-pointer flex-col items-center gap-1.5 rounded-[32px] border-[3px] border-dashed px-5 py-10 text-center transition enabled:active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 ${
+        className={`flex cursor-pointer flex-col items-center gap-1.5 rounded-4xl border-[3px] border-dashed px-5 py-10 text-center transition enabled:active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 ${
           dragging
             ? "border-leaf bg-mint"
             : "border-bloom bg-petal enabled:hover:border-leaf enabled:hover:bg-mint"
@@ -103,7 +103,7 @@ export default function UploadZone({
               {!loading && (
                 <button
                   type="button"
-                  className="absolute right-1.5 top-1.5 flex size-[26px] cursor-pointer items-center justify-center rounded-full bg-bloom-deep text-lg leading-none text-white"
+                  className="absolute right-1.5 top-1.5 flex size-6.5 cursor-pointer items-center justify-center rounded-full bg-bloom-deep text-lg leading-none text-white"
                   aria-label="Remove photo"
                   onClick={() => removePhoto(p.id)}
                 >
@@ -127,7 +127,7 @@ export default function UploadZone({
         disabled={photos.length === 0 || loading}
         onClick={onSubmit}
       >
-        {loading ? "Looking closely…" : "Identify my plant"}
+        {loading ? "Checking diagnosis..." : "Help my plant"}
       </button>
     </section>
   );

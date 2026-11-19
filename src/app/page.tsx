@@ -6,7 +6,7 @@ import ChatZone from "../components/ChatZone";
 import { analyzePhotos } from "../lib/api";
 import type { Message, Photo, Stage } from "../lib/types";
 
-// All state lives in the browser. Refreshing the page starts fresh.
+
 export default function Home() {
   const [stage, setStage] = useState<Stage>("upload");
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -35,7 +35,7 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[640px] flex-col gap-6 px-5 pb-8 pt-6">
+    <main className="mx-auto flex min-h-dvh max-w-160 flex-col gap-6 px-5 pb-8 pt-6">
       <header className="flex items-center gap-2.5">
         <span className="text-[1.6rem]" aria-hidden="true">🌱</span>
         <h1 className="font-display text-[1.75rem] font-semibold text-forest">Buotany</h1>

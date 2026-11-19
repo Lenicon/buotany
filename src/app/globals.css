@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* Buotany palette + fonts, available as bg-blush, text-forest, font-display, etc. */
 @theme inline {
   --color-blush: #fff3f7;
   --color-petal: #ffd9e6;

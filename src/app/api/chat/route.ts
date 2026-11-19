@@ -5,8 +5,8 @@ const openai = new OpenAI({ apiKey: process.env.AIKI_API_KEY, baseURL: process.e
 
 export async function POST(req: Request) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ error: "Missing OPENAI_API_KEY on server." }, { status: 500 });
+    if (!process.env.AIKI_API_KEY) {
+      return NextResponse.json({ error: "Missing AIKI_API_KEY on server." }, { status: 500 });
     }
 
     const { messages, contextSummary } = await req.json();
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
         : "");
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-6-luna",
       messages: [
         { role: "system", content: systemContent },
         ...messages.map((m: { role: "user" | "assistant"; content: string }) => ({

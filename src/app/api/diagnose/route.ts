@@ -26,8 +26,8 @@ export async function POST(req: Request) {
     if (!apiKey) {
       return NextResponse.json({ error: "Missing PLANTNET_API_KEY on server." }, { status: 500 });
     }
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ error: "Missing OPENAI_API_KEY on server." }, { status: 500 });
+    if (!process.env.AIKI_API_KEY) {
+      return NextResponse.json({ error: "Missing AIKI_API_KEY on server." }, { status: 500 });
     }
 
     const incomingForm = await req.formData();
@@ -86,10 +86,11 @@ export async function POST(req: Request) {
       null,
       2
     );
+    console.log(botanicalSummary);
 
     /* GIAN WOK ON THIS !!! */
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-6-luna",
       messages: [
         {
           role: "system",

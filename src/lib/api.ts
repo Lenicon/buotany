@@ -1,19 +1,20 @@
 import type { Message } from "./types";
 
+
+// Helper if backend wants base64 instead of raw files.
+export function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(",")[1]);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
+}
+
 // ─────────────────────────────────────────────────────────────
-// Plug your own logic in here. The UI only depends on these two
+// Plug in the logic here. The UI only depends on these two
 // functions, so nothing else needs to change.
 // ─────────────────────────────────────────────────────────────
-
-// Handy if your backend wants base64 instead of raw files.
-export function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve((reader.result as string).split(",")[1]);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
 
 // Called once after photos are submitted.
 // Return the assistant's first message.

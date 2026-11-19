@@ -1,17 +1,20 @@
 import type { Message } from "./types";
 
-let latestBotanicalContext = "";
+let latestContextToken = "";
+
+export function resetBotanicalContext(): void {
+  latestContextToken = "";
+}
 
 // Helper if backend wants base64 instead of raw files.
 export function fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(",")[1]);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-    });
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string).split(",")[1]);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }
-
 
 // Called once after photos are submitted.
 // Return the assistant's first message.
@@ -32,20 +35,24 @@ export async function analyzePhotos(files: File[]): Promise<string> {
     throw new Error(data.error || `Diagnosis failed (HTTP ${res.status}).`);
   }
 
-  latestBotanicalContext = data.contextSummary ?? "";
+  latestContextToken =
+    typeof data.contextToken === "string" ? data.contextToken : "";
   return data.diagnosis;
 }
 
 // Called for every chat message after that.
 // `messages` is the full history, `files` is the original photo list.
 // Return the assistant's reply.
-export async function sendMessage(messages: Message[], _files: File[]): Promise<string> {
+export async function sendMessage(
+  messages: Message[],
+  _files: File[],
+): Promise<string> {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       messages,
-      contextSummary: latestBotanicalContext,
+      contextToken: latestContextToken,
     }),
   });
 

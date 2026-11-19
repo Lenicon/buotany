@@ -80,16 +80,23 @@ const assistantMarkdownComponents: Components = {
             {children}
         </blockquote>
     ),
-    a: ({ href, children }) => (
-        <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium underline decoration-leaf underline-offset-2 hover:text-forest"
-        >
-            {children}
-        </a>
-    ),
+    a: ({ href, children }) => {
+        const isSafeHttps = typeof href === "string" && /^https:\/\//i.test(href.trim());
+        if (!isSafeHttps) {
+            return <span className="font-medium">{children}</span>;
+        }
+        return (
+            <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium underline decoration-leaf underline-offset-2 hover:text-forest"
+            >
+                {children}
+            </a>
+        );
+    },
+    img: () => null,
     hr: () => <hr className="my-2.5 border-forest/15" />,
 };
 
@@ -120,10 +127,14 @@ export default function ChatZone({
         try {
             const reply = await sendMessage(history, photos.map((p) => p.file));
             setMessages([...history, { role: "assistant", content: reply }]);
-        } catch {
+        } catch (err) {
+            const fallback =
+                err instanceof Error && err.message
+                    ? err.message
+                    : "I couldn’t answer that one. Try sending it again.";
             setMessages([
                 ...history,
-                { role: "assistant", content: "I couldn’t answer that one. Try sending it again." },
+                { role: "assistant", content: fallback },
             ]);
         } finally {
             setSending(false);
@@ -173,6 +184,7 @@ export default function ChatZone({
                     className="min-w-0 flex-1 rounded-full border-2 border-bloom bg-white px-5 py-3 placeholder:text-[#b08a98]"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
+                    maxLength={1500}
                     placeholder="Ask about watering, light, pests…"
                     aria-label="Your message"
                 />

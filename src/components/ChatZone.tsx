@@ -172,6 +172,7 @@ export default function ChatZone({
                 <input
                     className="min-w-0 flex-1 rounded-full border-2 border-bloom bg-white px-5 py-3 placeholder:text-[#b08a98]"
                     value={input}
+                    maxLength={1000}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask about watering, light, pests…"
                     aria-label="Your message"

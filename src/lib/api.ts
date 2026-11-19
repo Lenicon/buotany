@@ -1,5 +1,6 @@
 import type { Message } from "./types";
 
+let latestBotanicalContext = "";
 
 // Helper if backend wants base64 instead of raw files.
 export function fileToBase64(file: File): Promise<string> {
@@ -11,24 +12,48 @@ export function fileToBase64(file: File): Promise<string> {
     });
 }
 
-// ─────────────────────────────────────────────────────────────
-// Plug in the logic here. The UI only depends on these two
-// functions, so nothing else needs to change.
-// ─────────────────────────────────────────────────────────────
 
 // Called once after photos are submitted.
 // Return the assistant's first message.
 export async function analyzePhotos(files: File[]): Promise<string> {
-  // TODO: replace with your own call
-  await new Promise((r) => setTimeout(r, 1500));
-  return `Placeholder reply for ${files.length} photo${files.length > 1 ? "s" : ""}. Wire up analyzePhotos() in lib/api.ts.`;
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append("images", file);
+  }
+
+  const res = await fetch("/api/diagnose", {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data.error || `Diagnosis failed (HTTP ${res.status}).`);
+  }
+
+  latestBotanicalContext = data.contextSummary ?? "";
+  return data.diagnosis;
 }
 
 // Called for every chat message after that.
 // `messages` is the full history, `files` is the original photo list.
 // Return the assistant's reply.
-export async function sendMessage(messages: Message[], files: File[]): Promise<string> {
-  // TODO: replace with your own call
-  await new Promise((r) => setTimeout(r, 800));
-  return "Placeholder reply. Wire up sendMessage() in lib/api.ts.";
+export async function sendMessage(messages: Message[], _files: File[]): Promise<string> {
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messages,
+      contextSummary: latestBotanicalContext,
+    }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data.error || `Chat request failed (HTTP ${res.status}).`);
+  }
+
+  return data.reply;
 }

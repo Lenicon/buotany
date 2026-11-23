@@ -76,8 +76,8 @@ export default function UploadZone({
             <button
                 type="button"
                 className={`flex cursor-pointer flex-col items-center gap-1.5 rounded-4xl border-[3px] border-dashed px-5 py-10 text-center transition enabled:active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 ${dragging
-                        ? "border-leaf bg-mint text-forest"
-                        : "border-bloom bg-petal text-bloom-deep enabled:hover:border-leaf enabled:hover:bg-mint enabled:hover:text-forest"
+                    ? "border-leaf bg-mint text-forest"
+                    : "border-bloom bg-petal text-bloom-deep enabled:hover:border-leaf enabled:hover:bg-mint enabled:hover:text-forest"
                     }`}
                 disabled={loading || full}
                 onClick={() => inputRef.current?.click()}
@@ -116,14 +116,14 @@ export default function UploadZone({
             )}
 
             {photos.length > 0 && (
-                <ul className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3">
+                <ul className="flex flex-wrap justify-center gap-3">
                     {photos.map((p) => (
-                        <li key={p.id} className="relative aspect-square overflow-hidden rounded-[20px] border-[3px] border-leaf bg-mint">
+                        <li key={p.id} className="size-24 group/photo relative aspect-square overflow-hidden rounded-[20px] border-3 border-bloom bg-bloom transition-colors has-[button:hover]:border-bloom-deep">
                             <img src={p.url} alt="Uploaded plant" className="block h-full w-full object-cover" />
                             {!loading && (
                                 <button
                                     type="button"
-                                    className="absolute right-1.5 top-1.5 flex size-6.5 cursor-pointer items-center justify-center rounded-full bg-bloom-deep text-lg leading-none text-white"
+                                    className="absolute -right-0.5 -top-0.5 flex size-12 cursor-pointer items-start justify-end bg-bloom pt-1 pr-2 font-black text-xl leading-none text-white [clip-path:polygon(0_0,100%_0,100%_100%)] transition-colors hover:bg-bloom-deep"
                                     aria-label="Remove photo"
                                     onClick={() => removePhoto(p.id)}
                                 >

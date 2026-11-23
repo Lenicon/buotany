@@ -146,13 +146,18 @@ export default function ChatZone({
             <div className="flex items-center justify-between gap-3">
                 <ul className="flex gap-2 overflow-x-auto">
                     {photos.map((p) => (
-                        <li key={p.id} className="size-13 flex-none overflow-hidden rounded-2xl border-2 border-leaf">
+                        <li key={p.id} className="size-13 flex-none overflow-hidden rounded-2xl border-3 border-leaf">
                             <img src={p.url} alt="Your plant" className="block h-full w-full object-cover" />
                         </li>
                     ))}
                 </ul>
-                <button type="button" className="cursor-pointer whitespace-nowrap rounded-full border-2 border-bloom px-4.5 py-2 font-bold text-bloom-deep hover:bg-petal" onClick={onReset}>
-                    New photos
+                <button
+                    type="button"
+                    className="inline-flex cursor-pointer items-center justify-center gap-3 whitespace-nowrap rounded-full border-2 border-bloom px-4.5 py-2 font-bold text-bloom-deep hover:bg-bloom hover:text-white"
+                    onClick={onReset}
+                >
+                    <span aria-hidden="true" className="leading-none pt-1">↩</span>
+                    <span>New photos</span>
                 </button>
             </div>
 
@@ -160,11 +165,10 @@ export default function ChatZone({
                 {messages.map((m, i) => (
                     <div
                         key={i}
-                        className={`max-w-[85%] rounded-[20px] px-4 py-2.5 wrap-anywhere ${
-                            m.role === "assistant"
+                        className={`max-w-[85%] rounded-[20px] px-4 py-2.5 wrap-anywhere ${m.role === "assistant"
                                 ? "self-start rounded-bl-md bg-mint text-left"
                                 : "self-end whitespace-pre-wrap rounded-br-md bg-petal"
-                        }`}
+                            }`}
                     >
                         {m.role === "assistant" ? (
                             <ReactMarkdown components={assistantMarkdownComponents}>
@@ -181,7 +185,7 @@ export default function ChatZone({
 
             <form className="flex gap-2.5" onSubmit={handleSend}>
                 <input
-                    className="min-w-0 flex-1 rounded-full border-2 border-bloom bg-white px-5 py-3 placeholder:text-[#b08a98]"
+                    className="min-w-0 flex-1 rounded-full border-2 border-bloom bg-white px-5 py-3 placeholder:text-[#b08a98] focus:border-leaf focus:outline-none"
                     value={input}
                     maxLength={1000}
                     onChange={(e) => setInput(e.target.value)}

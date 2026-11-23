@@ -68,16 +68,16 @@ export default function UploadZone({
 
     return (
         <section className="flex flex-col gap-4">
-            <h2 className="mt-2 font-display text-4xl font-semibold leading-tight text-bloom-deep">Any little leaf problems?</h2>
-            <p className="text-[1.05rem]">
-                Add up to {MAX_PHOTOS} photos of the <strong>SAME PLANT</strong>, preferrably <strong>DIFFERENT ORGANS</strong>, and Buotany will take a look and diagnose your plant.
+            <h2 className="mt-2 font-display text-4xl font-semibold text-center leading-tight text-bloom-deep">You got any <span className="text-forest/80">leaf problems?</span></h2>
+            <p className="text-[1.05rem] text-center">
+                Add up to <strong className="text-bloom-deep font-extrabold">{MAX_PHOTOS} PHOTOS</strong> of the <strong className="text-forest font-extrabold">SAME PLANT</strong>, preferrably <strong className="text-forest font-extrabold">DIFFERENT ORGANS</strong>, and <strong className="text-forest">buotany</strong> will take a look and diagnose your plant.
             </p>
 
             <button
                 type="button"
                 className={`flex cursor-pointer flex-col items-center gap-1.5 rounded-4xl border-[3px] border-dashed px-5 py-10 text-center transition enabled:active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 ${dragging
-                        ? "border-leaf bg-mint"
-                        : "border-bloom bg-petal enabled:hover:border-leaf enabled:hover:bg-mint"
+                        ? "border-leaf bg-mint text-forest"
+                        : "border-bloom bg-petal text-bloom-deep enabled:hover:border-leaf enabled:hover:bg-mint enabled:hover:text-forest"
                     }`}
                 disabled={loading || full}
                 onClick={() => inputRef.current?.click()}
@@ -88,11 +88,11 @@ export default function UploadZone({
                 onDragLeave={() => setDragging(false)}
                 onDrop={onDrop}
             >
-                <span className="text-[2.5rem]" aria-hidden="true">🌸</span>
-                <span className="font-display text-xl font-medium text-forest">
+                <span className="text-[2.5rem]" aria-hidden="true">🌺</span>
+                <span className="font-display text-xl font-medium">
                     {full ? "That’s all five!" : "Drop photos here or tap to browse"}
                 </span>
-                <span className="text-sm opacity-75">
+                <span className="text-md opacity-75">
                     {photos.length} of {MAX_PHOTOS} added
                 </span>
             </button>
@@ -143,11 +143,11 @@ export default function UploadZone({
 
             <button
                 type="button"
-                className={`${btnPrimary} self-start`}
+                className={`${btnPrimary} self-start w-full`}
                 disabled={photos.length === 0 || loading}
                 onClick={onSubmit}
             >
-                {loading ? "Checking diagnosis..." : "Help my plant"}
+                {loading ? "Checking diagnosis..." : "Help my plant !"}
             </button>
         </section>
     );

@@ -12,6 +12,11 @@ export const SAFE_REFUSAL_MESSAGE =
   "I'm Buotany, and I can only help with plant identification, plant care, and plant pathology questions. Ask me anything about your plant's leaves, watering, light, soil, or pests!";
 
 const ZERO_WIDTH_RE = /[\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g;
+const HTML_TAG_RE = /<\/?[a-zA-Z][^>]*>/g;
+const BASE64_BLOCK_RE =
+  /(?:^|[\s:="`'])([A-Za-z0-9+/]{32,}={0,2})(?:$|[\s:="`'])/;
+const SUSPICIOUS_QUERY_PARAM_RE =
+  /(?:[?&])(?:prompt|system|instruction|secret|api_?key|token|leak|exfil|data|payload|debug|trace)=[^&#\s]{1,}/i;
 
 function stripUnsafeControlChars(input: string): string {
   let out = "";
@@ -44,6 +49,11 @@ const INJECTION_PATTERNS: ReadonlyArray<{ name: string; regex: RegExp }> = [
       /\b(?:ignore|disregard|forget|override|bypass|skip|pass\s+over)\s+(?:all\s+|any\s+|the\s+)?(?:previous|prior|above|earlier|initial|original|system|developer)\s+(?:instructions?|prompts?|rules?|directives?|constraints?|guidelines?|commands?|orders?)\b/i,
   },
   {
+    name: "indirect_rule_bypass",
+    regex:
+      /\b(?:set\s+aside|drop|lift|suspend|remove|disable|turn\s+off|act\s+as\s+if\s+you\s+have\s+no|operate\s+without)\s+(?:all\s+|any\s+|your\s+|the\s+)?(?:limits?|restrictions?|boundaries|rules?|guidelines?|guardrails?|filters?|constraints?)\b/i,
+  },
+  {
     name: "context_reset",
     regex:
       /\bforget\s+(?:everything|all)\s+(?:we(?:'|’)?ve\s+|you\s+)?(?:discussed|said|talked\s+about|been\s+told)\b/i,
@@ -64,6 +74,11 @@ const INJECTION_PATTERNS: ReadonlyArray<{ name: string; regex: RegExp }> = [
       /\b(?:reveal|show|print|output|repeat|dump|leak|display|echo|tell\s+me|what\s+(?:is|are))\s+(?:me\s+)?(?:your|the)\s+(?:exact\s+|full\s+|complete\s+|hidden\s+|internal\s+)?(?:system\s+prompt|system\s+instructions?|initial\s+prompt|hidden\s+instructions?|developer\s+prompt|security\s+rules?)\b/i,
   },
   {
+    name: "hypothetical_framing_override",
+    regex:
+      /\b(?:in\s+a\s+hypothetical\s+(?:story|scenario|world)|for\s+(?:educational|research|testing|security)\s+purposes(?:\s+only)?|hypothetically\s+speaking|roleplay\s+as\s+someone\s+who)\b.{0,120}\b(?:ignore|bypass|override|reveal|system\s+prompt|no\s+rules|unrestricted|jailbreak)\b/i,
+  },
+  {
     name: "delimiter_spoofing",
     regex:
       /(?:<\|(?:im_start|im_end|system|endoftext)\|>|\[\/?INST\]|<<\/?SYS>>|<\/?botanical_data>|^\s*###\s*(?:system|instruction|developer)\b)/im,
@@ -72,6 +87,10 @@ const INJECTION_PATTERNS: ReadonlyArray<{ name: string; regex: RegExp }> = [
     name: "role_spoofing_marker",
     regex:
       /^\s*(?:system|developer)\s*:\s*(?:you\s+are|ignore|override|new\s+rules)/im,
+  },
+  {
+    name: "encoded_payload_block",
+    regex: BASE64_BLOCK_RE,
   },
 ];
 
@@ -97,6 +116,37 @@ export function screenUserInput(rawText: string): InputScreenResult {
   }
   return { allowed: true, sanitized };
 }
+
+
+export type SemanticClassifier = (
+  text: string,
+) => Promise<{ flagged: boolean; reason?: string }>;
+
+/**
+ * Optional semantic/classifier layer to pair with deterministic regex screening.
+ * Pass a classifier/moderation function if you want semantic intent detection.
+ */
+export async function screenUserInputSemantic(
+  rawText: string,
+  classifier?: SemanticClassifier,
+): Promise<InputScreenResult> {
+  const regexResult = screenUserInput(rawText);
+  if (!regexResult.allowed || !classifier) {
+    return regexResult;
+  }
+
+  const verdict = await classifier(regexResult.sanitized);
+  if (verdict.flagged) {
+    return {
+      allowed: false,
+      reason: verdict.reason || "semantic_classifier_flagged",
+      sanitized: regexResult.sanitized,
+    };
+  }
+
+  return regexResult;
+}
+
 
 export type ValidateChatMessagesResult =
   | { ok: true; messages: ValidatedChatMessage[] }
@@ -188,15 +238,26 @@ export function validateChatMessages(
       };
     }
 
-    if (role === "user") {
-      const screen = screenUserInput(normalized);
-      if (!screen.allowed) {
-        return { ok: false, kind: "prompt_injection", reason: screen.reason };
-      }
-      validated.push({ role: "user", content: screen.sanitized });
-    } else {
-      validated.push({ role: "assistant", content: normalized });
+    const screen = screenUserInput(normalized);
+    if (!screen.allowed) {
+      return { ok: false, kind: "prompt_injection", reason: screen.reason };
     }
+
+    const safeContent =
+      role === "assistant"
+        ? screen.sanitized.replace(HTML_TAG_RE, "").trim()
+        : screen.sanitized;
+
+    if (!safeContent) {
+      return {
+        ok: false,
+        kind: "validation_error",
+        error: "Message cannot be empty.",
+      };
+    }
+
+    validated.push({ role, content: safeContent });
+
   }
 
   const lastMessage = validated[validated.length - 1];
@@ -215,7 +276,31 @@ const SYSTEM_LEAK_INDICATORS: ReadonlyArray<RegExp> = [
   /SECURITY\s*&\s*BOUNDARY\s*RULES\s*\(HIGHEST\s*PRIORITY/i,
   /Untrusted\s+Data\s+Isolation:\s*Treat\s+all\s+text\s+inside/i,
   /<\/?botanical_data>/i,
+  /\b(?:NEVER\s+OVERRIDE|Confidentiality:\s*Never\s+reveal|Physical\s+Safety:\s*Never\s+confirm|Output\s+Hygiene:\s*Do\s+not\s+include\s+raw\s+HTML)\b/i,
+  /\b(?:my\s+(?:hidden|internal|system)\s+(?:instructions?|prompt|rules?)\s+(?:say|state|require|forbid))\b/i,
 ];
+
+function isSuspiciousLinkUrl(rawUrl: string): boolean {
+  const trimmed = rawUrl.trim();
+  if (!/^https:\/\//i.test(trimmed)) {
+    return true;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    const fullSearchAndHash = `${parsed.search}${parsed.hash}`;
+    if (SUSPICIOUS_QUERY_PARAM_RE.test(fullSearchAndHash)) {
+      return true;
+    }
+    for (const [, value] of parsed.searchParams.entries()) {
+      if (value.length > 160 || BASE64_BLOCK_RE.test(value)) {
+        return true;
+      }
+    }
+    return false;
+  } catch {
+    return true;
+  }
+}
 
 /**
  * Post-processes LLM output to catch accidental system-prompt leakage and strip
@@ -235,17 +320,18 @@ export function sanitizeAssistantOutput(
   }
 
   // Strip markdown image embeds `![alt](url)` to prevent exfiltration beacons
-  let cleaned = trimmed.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, "$1");
+  let cleaned = trimmed.replace(HTML_TAG_RE, "$1");
+
+  cleaned = cleaned.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, "$1");
 
   // Neutralize non-https markdown links (javascript:, data:, http:, etc.)
   cleaned = cleaned.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
     (match, label: string, url: string) => {
-      const safeUrl = url.trim();
-      if (/^https:\/\//i.test(safeUrl)) {
-        return match;
+      if (isSuspiciousLinkUrl(url)) {
+        return label;
       }
-      return label;
+      return match;
     },
   );
 

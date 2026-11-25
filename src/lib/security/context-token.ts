@@ -1,13 +1,16 @@
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import type { BotanicalContext } from "./prompts";
 import { sanitizeDataField } from "./prompts";
 
 const TOKEN_VERSION = 1;
 const DEFAULT_TTL_SECONDS = 60 * 60 * 2; // 2 hours
 const MAX_TOKEN_LENGTH = 8192;
+const MAX_CLOCK_SKEW_SECONDS = 60;
 
 type SignedPayload = {
   v: number;
+  jti: string;
+  iat: number;
   exp: number;
   ctx: BotanicalContext;
 };
@@ -34,6 +37,10 @@ function computeSignature(encodedPayload: string, key: Buffer): string {
   return createHmac("sha256", key).update(encodedPayload).digest("base64url");
 }
 
+function isNonEmptyString(value: unknown, maxLen = 128): value is string {
+  return typeof value === "string" && value.length > 0 && value.length <= maxLen;
+}
+
 /**
  * Signs a sanitized BotanicalContext into a compact, tamper-evident token
  * (`<base64url-payload>.<base64url-hmac>`) so the client cannot forge or
@@ -42,9 +49,12 @@ function computeSignature(encodedPayload: string, key: Buffer): string {
 export function signContext(
   context: BotanicalContext,
   ttlSeconds = DEFAULT_TTL_SECONDS,
+  nowSeconds = Math.floor(Date.now() / 1000),
 ): string {
   const payload: SignedPayload = {
     v: TOKEN_VERSION,
+    jti: randomUUID(),
+    iat: nowSeconds,
     exp: Math.floor(Date.now() / 1000) + ttlSeconds,
     ctx: context,
   };
@@ -56,7 +66,7 @@ export function signContext(
 }
 
 export type VerifyContextResult =
-  | { ok: true; context: BotanicalContext }
+  | { ok: true; context: BotanicalContext; jti: string; iat: number; exp: number }
   | { ok: false; error: string };
 
 function isValidBotanicalContext(value: unknown): value is BotanicalContext {
@@ -97,7 +107,10 @@ function isValidBotanicalContext(value: unknown): value is BotanicalContext {
 /**
  * Verifies signature, expiration, and schema of a context token returned by `/api/diagnose`.
  */
-export function verifyContext(token: unknown): VerifyContextResult {
+export function verifyContext(
+  token: unknown,
+  nowSeconds = Math.floor(Date.now() / 1000),
+): VerifyContextResult {
   if (
     typeof token !== "string" ||
     token.length === 0 ||
@@ -141,10 +154,18 @@ export function verifyContext(token: unknown): VerifyContextResult {
   const payload = parsed as Partial<SignedPayload>;
   if (
     payload.v !== TOKEN_VERSION ||
+    !isNonEmptyString(payload.jti, 128) ||
+    typeof payload.iat !== "number" ||
+    !Number.isFinite(payload.iat) ||
     typeof payload.exp !== "number" ||
+    !Number.isFinite(payload.exp) ||
     !isValidBotanicalContext(payload.ctx)
   ) {
     return { ok: false, error: "Invalid diagnosis context payload." };
+  }
+
+  if (payload.iat > nowSeconds + MAX_CLOCK_SKEW_SECONDS) {
+    return { ok: false, error: "Invalid diagnosis token issue time." };
   }
 
   if (payload.exp < Math.floor(Date.now() / 1000)) {
@@ -172,5 +193,11 @@ export function verifyContext(token: unknown): VerifyContextResult {
     })),
   };
 
-  return { ok: true, context: sanitized };
+  return {
+    ok: true,
+    context: sanitized,
+    jti: payload.jti,
+    iat: payload.iat,
+    exp: payload.exp,
+  };
 }
